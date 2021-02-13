@@ -1,0 +1,38 @@
+{
+    "seed": 42,
+    "lr": 2e-5,
+    "warmup": 0.1,
+    "do_lower_case": true,
+    "mode": "train_eval",
+    "uda_mode": true,
+
+    "total_steps": 1000,
+    "max_seq_length": 128,
+    "train_batch_size": 8,
+    "eval_batch_size": 16,
+
+    "unsup_ratio": 3,
+    "uda_coeff": 0,
+    "proj_coeff": 1,
+    "ruda_coeff": 1,
+    "tsa": "linear_schedule",
+    "uda_softmax_temp": 0.85,
+    "uda_confidence_thresh": 0.45,
+
+    "data_parallel": true,
+    "need_prepro": false,
+    "sup_data_dir": "data/cf_train_200",
+    "unsup_data_dir": "imdb/imdb_unsup_train.txt",
+    "eval_data_dir": "data/paired",
+
+    "model_file":null,
+    "pretrain_file":"BERT_Base_Uncased/bert_model.ckpt",
+    "vocab":"BERT_Base_Uncased/vocab.txt",
+    "task": "imdb",
+
+    "save_steps": 300,
+    "check_steps": 300,
+    "results_dir": "results_imdb_2",
+
+    "is_position": false
+}

@@ -1,0 +1,29 @@
+{
+    "seed": 42,
+    "lr": 2e-5,
+    "warmup": 0.1,
+    "do_lower_case": true,
+    "mode": "train_eval",
+    "uda_mode": false,
+
+    "total_steps": 1200,
+    "max_seq_length": 128,
+    "train_batch_size": 2,
+    "eval_batch_size": 4,
+
+    "data_parallel": true,
+    "need_prepro": false,
+    "sup_data_dir": "data/cf_train_200",
+    "eval_data_dir": "data/paired",
+
+    "model_file":null,
+    "pretrain_file":"BERT_Base_Uncased/bert_model.ckpt",
+    "vocab":"BERT_Base_Uncased/vocab.txt",
+    "task": "imdb",
+
+    "save_steps": 600,
+    "check_steps": 200,
+    "results_dir": "results_non",
+
+    "is_position": false
+}
