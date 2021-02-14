@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import fire
 import argparse
 import json
@@ -57,7 +58,6 @@ def main(cfg, model_cfg):
     cfg['eval_data_dir'] = args.eval_data_dir                  
     cfg['data_type'] = args.data_type             
     cfg = configuration.params.from_dict(cfg) 
-    breakpoint()
 
     model_cfg = configuration.model.from_json(model_cfg)        # BERT_cfg
     proj_coeff = args.p
@@ -67,7 +67,9 @@ def main(cfg, model_cfg):
         results_dir = cfg.results_dir +'/p_{}_r_{}'.format(proj_coeff,ruda_coeff)
     else:
         results_dir = args.results_dir
-    SEED = 1
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+    # SEED = 1
     # set_seeds(42)
     # Load Data & Create Criterion
     data = load_data(cfg)
