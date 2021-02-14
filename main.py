@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import fire
 import argparse
 import json
 import torch
