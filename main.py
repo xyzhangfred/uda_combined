@@ -53,9 +53,12 @@ def main(cfg, model_cfg):
     
     # Load Configuration
     cfg = json.load(open(cfg,'r'))
-    cfg['sup_data_dir'] = args.sup_data_dir                  
-    cfg['eval_data_dir'] = args.eval_data_dir                  
-    cfg['data_type'] = args.data_type             
+    if args.sup_data_dir is not None:
+        cfg['sup_data_dir'] = args.sup_data_dir        
+    if args.eval_data_dir is not None:          
+        cfg['eval_data_dir'] = args.eval_data_dir                  
+    if args.data_type is not None:
+        cfg['data_type'] = args.data_type             
     cfg = configuration.params.from_dict(cfg) 
 
     model_cfg = configuration.model.from_json(model_cfg)        # BERT_cfg
