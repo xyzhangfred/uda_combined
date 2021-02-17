@@ -28,7 +28,7 @@ from transformers import BertModel
 from model import BERTProjector
 # TSA
 def get_tsa_thresh(schedule, global_step, num_train_steps, start, end,device):
-    training_progress = torch.Tensor(float(global_step) / float(num_train_steps))
+    training_progress = torch.tensor(float(global_step) / float(num_train_steps))
     if schedule == 'linear_schedule':
         threshold = training_progress
     elif schedule == 'exp_schedule':
@@ -82,7 +82,8 @@ def main(cfg, model_cfg):
     sup_proj_criterion = nn.MSELoss(reduction='mean')
     # Load Model
     bert_model = BertModel.from_pretrained('bert-base-uncased')
-    model = BERTProjector(bert_model, input_dim=768,hidden_dim=768, output_dim=768)
+    #hid_dim = 768 or 300
+    model = BERTProjector(bert_model, input_dim=768,hidden_dim=300, output_dim=768)
     device = torch.device('cuda:0')
     optimizer = torch.optim.AdamW(list(model.bert.parameters())+list(model.projector.parameters())+list(model.classifier.parameters()),lr=cfg.lr)
     # Create trainer
@@ -197,7 +198,7 @@ def main(cfg, model_cfg):
 
 
 if __name__ == '__main__':
-    main('config/uda.json', 'config/bert_base.json')
+    main('config/uda_matres.json', 'config/bert_base.json')
     # fire.Fire(main)
     # for rep in range(5):
         # for p in [0,1,2,5]:

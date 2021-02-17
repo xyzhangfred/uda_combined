@@ -10,7 +10,7 @@ from transformers import BertTokenizer, BertModel, BertForSequenceClassification
 from transformers import BertForSequenceClassification, Trainer, TrainingArguments
 
 class BERTProjector():
-    def __init__(self, bert_model, input_dim,hidden_dim, output_dim):
+    def __init__(self, bert_model, input_dim,hidden_dim, output_dim, ):
         """
         BERT+Projector+Classifier
         """

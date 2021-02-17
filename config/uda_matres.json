@@ -6,13 +6,13 @@
     "mode": "train_eval",
     "uda_mode": true,
 
-    "total_steps": 600,
+    "total_steps": 1500,
     "max_seq_length": 128,
     "train_batch_size": 8,
     "eval_batch_size": 16,
 
-    "unsup_ratio": 3,
-    "uda_coeff": 1,
+    "unsup_ratio": 1,
+    "uda_coeff": 0,
     "proj_coeff": 1,
     "ruda_coeff": 1,
     "tsa": "linear_schedule",

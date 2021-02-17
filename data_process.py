@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 file_path = '/home/xiongyi/dataxyz/repos/Mine/uda_combined/data/paired/train_paired_full.tsv'
 
-data_num = 200
+data_num = 100
 new_path = '/home/xiongyi/dataxyz/repos/Mine/uda_combined/data/paired/train_paired_num_{}.tsv'.format(data_num)
 with open(file_path, 'r') as f:
     lines = f.readlines()
