@@ -42,7 +42,6 @@ class Trainer(object):
 
         self.device = device
         self.results_dir = results_dir
-
         # data iter
         if len(data_iter) == 1:
             self.sup_iter = data_iter[0]

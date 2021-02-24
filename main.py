@@ -21,7 +21,7 @@ import torch.nn.functional as F
 
 # import models
 import train
-from data.load_data import load_data
+from data_util.load_data import load_data
 # from utils.utils import get_device, _get_device, torch_device_one
 from utils import optim, configuration
 from transformers import BertModel
@@ -108,8 +108,10 @@ def main(cfg, model_cfg):
         # sup loss
         sup_size = len(sup_batch_orig['input_ids']) 
         unsup_size = unsup_batch[0].shape[0]
-        hid_orig_sup = model.bert(input_ids=sup_batch_orig['input_ids'],attention_mask = sup_batch_orig['attention_mask'])[1]
-        hid_cf_sup = model.bert(input_ids=sup_batch_cf['input_ids'],attention_mask = sup_batch_cf['attention_mask'])[1]
+        hid_orig_sup = model.bert(input_ids=sup_batch_orig['input_ids'],attention_mask = sup_batch_orig['attention_mask'],\
+            token_type_ids=sup_batch_orig['token_type_ids'])[1]
+        hid_cf_sup = model.bert(input_ids=sup_batch_cf['input_ids'],attention_mask = sup_batch_cf['attention_mask'],
+        token_type_ids=sup_batch_cf['token_type_ids'])[1]
         logits_orig_sup = model.classifier(hid_orig_sup)      
         logits_cf_sup = model.classifier(hid_cf_sup)      
         sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])+sup_criterion(logits_cf_sup, sup_batch_cf['labels'])  # shape : train_batch_size
@@ -128,7 +130,7 @@ def main(cfg, model_cfg):
         if unsup_batch:
             # ori
             with torch.no_grad():
-                orig_hid = model.bert(input_ids = ori_input_ids, attention_mask = ori_input_mask)[1]
+                orig_hid = model.bert(input_ids = ori_input_ids, attention_mask = ori_input_mask,token_type_ids=ori_segment_ids)[1]
                 ori_logits = model.classifier(orig_hid)
                 ori_prob   = F.softmax(ori_logits, dim=-1)    # KLdiv target
                 # ori_log_prob = F.log_softmax(ori_logits, dim=-1)
@@ -144,7 +146,7 @@ def main(cfg, model_cfg):
             # aug
             # softmax temperature controlling
             uda_softmax_temp = cfg.uda_softmax_temp if cfg.uda_softmax_temp > 0 else 1.
-            aug_logits = model.classifier(model.bert(input_ids = aug_input_ids, attention_mask = aug_input_mask)[1])
+            aug_logits = model.classifier(model.bert(input_ids = aug_input_ids, attention_mask = aug_input_mask,token_type_ids=aug_segment_ids)[1])
             aug_log_prob = F.log_softmax(aug_logits / uda_softmax_temp, dim=-1)
 
             proj_unsup_hid = model.projector(orig_hid)
@@ -201,7 +203,7 @@ def main(cfg, model_cfg):
 
 
 if __name__ == '__main__':
-    main('config/uda_matres.json', 'config/bert_base.json')
+    main('config/uda_imdb_contrast.json', 'config/bert_base.json')
     # fire.Fire(main)
     # for rep in range(5):
         # for p in [0,1,2,5]:

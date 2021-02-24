@@ -1,0 +1,39 @@
+{
+    "seed": 42,
+    "lr": 2e-5,
+    "warmup": 0.1,
+    "do_lower_case": true,
+    "mode": "train_eval_cf",
+    "uda_mode": true,
+
+    "total_steps": 200,
+    "max_seq_length": 128,
+    "train_batch_size": 8,
+    "eval_batch_size": 16,
+
+    "unsup_ratio": 1,
+    "uda_coeff": 0,
+    "proj_coeff": 1,
+    "ruda_coeff": 1,
+    "tsa": "linear_schedule",
+    "uda_softmax_temp": 0.85,
+    "uda_confidence_thresh": 0.45,
+
+    "data_parallel": true,
+    "data_type": "mctaco",
+    "need_prepro": false,
+    "sup_data_dir": "data/mctaco",
+    "unsup_data_dir": "data/mctaco/mctaco_unlabeled.tsv",
+    "eval_data_dir": "data/mctaco",
+
+    "model_file":null,
+    "pretrain_file":"BERT_Base_Uncased/bert_model.ckpt",
+    "vocab":"BERT_Base_Uncased/vocab.txt",
+    "task": "imdb",
+
+    "save_steps": 500,
+    "check_steps": 100,
+    "results_dir": "results_mctaco",
+
+    "is_position": false
+}
