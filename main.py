@@ -45,6 +45,7 @@ def main(cfg, model_cfg):
     parser = argparse.ArgumentParser()
     parser.add_argument('--p', type=float, help='coeff for projection loss')
     parser.add_argument('--r', type=float, help='coeff for ruda loss')
+    parser.add_argument('--u', type=float, help='coeff for uda loss')
     parser.add_argument('--results_dir', type=str, default = None, help='result file name.')
     parser.add_argument('--sup_data_dir', type=str, default = None, help='sup data dir.')
     parser.add_argument('--eval_data_dir', type=str, default = None, help='eval_data_dir')
@@ -58,7 +59,9 @@ def main(cfg, model_cfg):
     if args.eval_data_dir is not None:          
         cfg['eval_data_dir'] = args.eval_data_dir                  
     if args.data_type is not None:
-        cfg['data_type'] = args.data_type             
+        cfg['data_type'] = args.data_type     
+    if args.u is not None:
+        cfg['uda_coeff'] = args.u            
     cfg = configuration.params.from_dict(cfg) 
 
     model_cfg = configuration.model.from_json(model_cfg)        # BERT_cfg
@@ -203,7 +206,7 @@ def main(cfg, model_cfg):
 
 
 if __name__ == '__main__':
-    main('config/uda_imdb_contrast.json', 'config/bert_base.json')
+    main('config/uda.json', 'config/bert_base.json')
     # fire.Fire(main)
     # for rep in range(5):
         # for p in [0,1,2,5]:

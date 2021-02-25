@@ -6,7 +6,7 @@
     "mode": "train_eval",
     "uda_mode": true,
 
-    "total_steps": 300,
+    "total_steps": 1000,
     "max_seq_length": 128,
     "train_batch_size": 8,
     "eval_batch_size": 16,
@@ -21,7 +21,7 @@
 
     "data_parallel": true,
     "need_prepro": false,
-    "sup_data_dir": "data/cf_train_200",
+    "sup_data_dir": "data/cf_train_100",
     "unsup_data_dir": "imdb/imdb_unsup_train.txt",
     "eval_data_dir": "data/paired",
 
@@ -30,8 +30,8 @@
     "vocab":"BERT_Base_Uncased/vocab.txt",
     "task": "imdb",
 
-    "save_steps": 300,
-    "check_steps": 100,
+    "save_steps": 500,
+    "check_steps": 500,
     "results_dir": "results_imdb_2",
 
     "is_position": false
