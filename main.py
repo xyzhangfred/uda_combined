@@ -43,6 +43,7 @@ def get_tsa_thresh(schedule, global_step, num_train_steps, start, end,device):
 
 def main(cfg, model_cfg):
     parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, help='config file path')
     parser.add_argument('--p', type=float, help='coeff for projection loss')
     parser.add_argument('--r', type=float, help='coeff for ruda loss')
     parser.add_argument('--u', type=float, help='coeff for uda loss')
@@ -53,6 +54,9 @@ def main(cfg, model_cfg):
     args = parser.parse_args()
     
     # Load Configuration
+    if args.config is not None:
+        cfg = args.config        
+   
     cfg = json.load(open(cfg,'r'))
     if args.sup_data_dir is not None:
         cfg['sup_data_dir'] = args.sup_data_dir        
@@ -101,6 +105,7 @@ def main(cfg, model_cfg):
         # logits -> prob(softmax) -> log_prob(log_softmax)
         # batch
         sup_batch_orig, sup_batch_cf = sup_batch
+        
         if unsup_batch:
             ori_input_ids, ori_segment_ids, ori_input_mask, \
             aug_input_ids, aug_segment_ids, aug_input_mask  = unsup_batch
@@ -117,7 +122,10 @@ def main(cfg, model_cfg):
         token_type_ids=sup_batch_cf['token_type_ids'])[1]
         logits_orig_sup = model.classifier(hid_orig_sup)      
         logits_cf_sup = model.classifier(hid_cf_sup)      
-        sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])+sup_criterion(logits_cf_sup, sup_batch_cf['labels'])  # shape : train_batch_size
+        try:
+            sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])+sup_criterion(logits_cf_sup, sup_batch_cf['labels'])  # shape : train_batch_size
+        except:
+            breakpoint()
         hid_sup_proj = model.projector(hid_orig_sup)
         proj_loss = sup_proj_criterion(hid_sup_proj,hid_cf_sup).mean()
         if cfg.tsa:

@@ -197,10 +197,10 @@ def get_paired_dataloader(tokenizer,orig_sents,orig_labels,cf_sents, cf_labels, 
     else:
         orig_examples = [InputExample(guid= str(i), text_a = sent.split('\t\t')[0],text_b = sent.split('\t\t')[1], label= orig_labels[i]) for i,sent in enumerate(orig_sents)]
         cf_examples = [InputExample(guid= str(i), text_a = sent.split('\t\t')[0],text_b = sent.split('\t\t')[1], label= cf_labels[i]) for i,sent in enumerate(cf_sents)]
-    
 
     orig_features = convert_examples_to_features(orig_examples, tokenizer, max_length=max_len, )
     cf_features = convert_examples_to_features(cf_examples, tokenizer, max_length=max_len, )
+
     dataset = PairedBertDataset(orig_features, cf_features)
     dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=paired_data_collator, shuffle= True)
 

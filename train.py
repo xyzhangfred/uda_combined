@@ -87,10 +87,11 @@ class Trainer(object):
         for i, batch in enumerate(iter_bar):
             # Device assignment
             if self.cfg.uda_mode:
-                sup_batch_orig = next(self.sup_iter)['orig']
-                sup_batch_cf = next(self.sup_iter)['cf']
+                sup_batch_full = next(self.sup_iter)
+                sup_batch_orig = sup_batch_full['orig']
+                sup_batch_cf = sup_batch_full['cf']
                 sup_batch_orig = {t: sup_batch_orig[t].to(self.device) for t in sup_batch_orig}
-                sup_batch_cf = {t: sup_batch_orig[t].to(self.device) for t in sup_batch_cf}
+                sup_batch_cf = {t: sup_batch_cf[t].to(self.device) for t in sup_batch_cf}
                 sup_batch = [sup_batch_orig, sup_batch_cf]
                 unsup_batch = [t.to(self.device) for t in batch]
             

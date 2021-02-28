@@ -54,10 +54,11 @@ class load_data:
             #for imdb_contrast use test data as training data since there's more of that
             orig_sents,orig_labels,cf_sents, cf_labels = read_imdb_contrast_data(prefix = 'test', max_len = 128,data_dir = self.sup_data_dir)
         elif self.data_type == 'matres':
-            orig_sents,orig_labels,cf_sents, cf_labels = read_matres_data(prefix = 'train', max_len = 128,data_dir = self.sup_data_dir)
+            cf_sents, cf_labels, orig_sents,orig_labels, = read_matres_data(prefix = 'train', max_len = 128,data_dir = self.sup_data_dir)
         elif self.data_type == 'mctaco':
             # orig_sents,orig_labels,cf_sents, cf_labels = read_mctaco_data(prefix = 'train', max_len = 128,data_dir = self.sup_data_dir)
-            cf_sents,cf_labels,orig_sents, orig_labels = read_mctaco_data(prefix = 'train', max_len = 128,data_dir = self.sup_data_dir)
+            orig_sents, orig_labels, cf_sents,cf_labels, = read_mctaco_data(prefix = 'train', max_len = 128,data_dir = self.sup_data_dir)
+        assert len(orig_sents) == len(cf_sents)
         sup_data_iter = get_paired_dataloader(self.tokenizer,orig_sents,orig_labels,cf_sents, cf_labels, batch_size = 8,max_len=128)
         return sup_data_iter
 
@@ -198,11 +199,12 @@ class matres_unsup_dataset(Dataset):
         # need preprocessing
         with open(file, 'r', encoding='utf-8') as f:
             lines = f.readlines()
+        orig_lines = [l.split('\t')[0] for l in lines]
+        aug_lines = [l.split('\t')[1].strip() for l in lines]
         # unsupervised dataset
         data = {'ori':[], 'aug':[]}
         tokenizer=BertTokenizer.from_pretrained('bert-base-uncased')
         # for line in lines:
-        #     breakpoint()
         #     ori = tokenizer(line.strip(),
         #         max_length=max_len,
         #         padding="max_length",
@@ -211,13 +213,16 @@ class matres_unsup_dataset(Dataset):
         #     self.cnt += 1
         #     data['ori'].append(ori)    # drop label_id
         # ori_tensor = [torch.tensor(x, dtype=torch.long) for x in zip(*data['ori'])]
-        ori_tokenized = tokenizer([(line.strip(),None ) for line in lines],
+        ori_tokenized = tokenizer([(line.strip(),None ) for line in orig_lines],
                 max_length=max_len,
                 padding="max_length",
                 truncation=True,)
         ori_tensor = [torch.LongTensor(x) for x in [ori_tokenized['input_ids'],ori_tokenized['token_type_ids'],ori_tokenized['attention_mask']]]
-        #just duplicate orig to be aug
-        aug_tensor = ori_tensor
+        aug_tokenized = tokenizer([(line.strip(),None ) for line in aug_lines],
+                max_length=max_len,
+                padding="max_length",
+                truncation=True,)
+        aug_tensor = [torch.LongTensor(x) for x in [aug_tokenized['input_ids'],aug_tokenized['token_type_ids'],aug_tokenized['attention_mask']]]
         self.tensors = ori_tensor + aug_tensor
         # already preprocessed
         
