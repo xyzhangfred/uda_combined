@@ -31,7 +31,7 @@
     "vocab":"BERT_Base_Uncased/vocab.txt",
     "task": "imdb",
 
-    "save_steps": 500,
+    "save_steps": 5000,
     "check_steps": 100,
     "results_dir": "results_mctaco",
 

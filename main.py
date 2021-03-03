@@ -47,6 +47,8 @@ def main(cfg, model_cfg):
     parser.add_argument('--p', type=float, help='coeff for projection loss')
     parser.add_argument('--r', type=float, help='coeff for ruda loss')
     parser.add_argument('--u', type=float, help='coeff for uda loss')
+    parser.add_argument('--hidden_dim', type=int, default = 768, help='hidden_dim for projector')
+    parser.add_argument('--layer_num', type=int, default = 4, help='layer_num for projector')
     parser.add_argument('--results_dir', type=str, default = None, help='result file name.')
     parser.add_argument('--sup_data_dir', type=str, default = None, help='sup data dir.')
     parser.add_argument('--eval_data_dir', type=str, default = None, help='eval_data_dir')
@@ -93,7 +95,7 @@ def main(cfg, model_cfg):
     # Load Model
     bert_model = BertModel.from_pretrained('bert-base-uncased')
     #hid_dim = 768 or 300
-    model = BERTProjector(bert_model, input_dim=768,hidden_dim=300, output_dim=768)
+    model = BERTProjector(bert_model, input_dim=768,hidden_dim=args.hidden_dim, output_dim=768, layer_num=args.layer_num)
     device = torch.device('cuda:0')
     optimizer = torch.optim.AdamW(list(model.bert.parameters())+list(model.projector.parameters())+list(model.classifier.parameters()),lr=cfg.lr)
     # Create trainer
