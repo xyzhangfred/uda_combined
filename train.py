@@ -114,8 +114,8 @@ class Trainer(object):
             global_step += 1
             loss_sum += final_loss.item()
             if self.cfg.uda_mode:
-                iter_bar.set_description('final=%5.3f ruda=%5.3f proj=%5.3f sup=%5.3f'\
-                        % (final_loss.item(), ruda_loss.item(),proj_loss.item(), sup_loss.item()))
+                iter_bar.set_description('final=%5.3f ruda=%5.3f proj=%5.3f sup=%5.3f uda=%5.3f'\
+                        % (final_loss.item(), ruda_loss.item(),proj_loss.item(), sup_loss.item(), unsup_loss.item()))
             else:
                 iter_bar.set_description('loss=%5.3f' % (final_loss.item()))
 

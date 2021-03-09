@@ -6,23 +6,23 @@ from tqdm import tqdm
 import os,sys
 import random
 import torch
+import torch.nn.functional as F
 from transformers import BertTokenizer, BertModel, BertForSequenceClassification
 from transformers import BertForSequenceClassification, Trainer, TrainingArguments
 
 
 class resBlock(nn.Module):
     def __init__(self,input_dim,hidden_dim,output_dim):
-        super(block1, self).__init__()
+        super(resBlock, self).__init__()
         self.linear1 = nn.Linear(input_dim, hidden_dim)
         self.linear2 = nn.Linear(hidden_dim, output_dim)
 
     def forward(self,x):
         residual = x
-        out = F.relu(self.linear1(x))
-        out = F.relu(self.linear2(out))
-        
-        out += residual
-        return out
+        out1 = torch.relu(self.linear1(x))
+        out2 = torch.relu(self.linear2(out1))
+        out2 += residual
+        return out2
 
 
 class BERTProjector():

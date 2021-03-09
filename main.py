@@ -25,7 +25,7 @@ from data_util.load_data import load_data
 # from utils.utils import get_device, _get_device, torch_device_one
 from utils import optim, configuration
 from transformers import BertModel
-from model import BERTProjector
+from model import BERTProjector,BERTResProjector
 # TSA
 def get_tsa_thresh(schedule, global_step, num_train_steps, start, end,device):
     training_progress = torch.tensor(float(global_step) / float(num_train_steps))
@@ -95,10 +95,11 @@ def main(cfg, model_cfg):
     # Load Model
     bert_model = BertModel.from_pretrained('bert-base-uncased')
     #hid_dim = 768 or 300
-    model = BERTProjector(bert_model, input_dim=768,hidden_dim=args.hidden_dim, output_dim=768, layer_num=args.layer_num)
+    model = BERTResProjector(bert_model, input_dim=768,hidden_dim=args.hidden_dim, output_dim=768, block_num=args.layer_num)
     device = torch.device('cuda:0')
     optimizer = torch.optim.AdamW(list(model.bert.parameters())+list(model.projector.parameters())+list(model.classifier.parameters()),lr=cfg.lr)
     # Create trainer
+    torch.autograd.set_detect_anomaly(True)
     trainer = train.Trainer(cfg, model, data_iter, optimizer, device, results_dir)
 
     # Training
@@ -129,7 +130,8 @@ def main(cfg, model_cfg):
         except:
             breakpoint()
         #what if we learn the residual
-        hid_sup_proj = model.projector(hid_orig_sup) + hid_orig_sup
+        # hid_sup_proj = model.projector(hid_orig_sup) + hid_orig_sup
+        hid_sup_proj = model.projector(hid_orig_sup) 
         proj_loss = sup_proj_criterion(hid_sup_proj,hid_cf_sup).mean()
         if cfg.tsa:
             tsa_thresh = get_tsa_thresh(cfg.tsa, global_step, cfg.total_steps, start=1./logits_orig_sup.shape[-1], end=1,device=device)
@@ -147,7 +149,6 @@ def main(cfg, model_cfg):
                 orig_hid = model.bert(input_ids = ori_input_ids, attention_mask = ori_input_mask,token_type_ids=ori_segment_ids)[1]
                 ori_logits = model.classifier(orig_hid)
                 ori_prob   = F.softmax(ori_logits, dim=-1)    # KLdiv target
-                # ori_log_prob = F.log_softmax(ori_logits, dim=-1)
 
                 # confidence-based masking
                 if cfg.uda_confidence_thresh != -1:
@@ -163,8 +164,9 @@ def main(cfg, model_cfg):
             aug_logits = model.classifier(model.bert(input_ids = aug_input_ids, attention_mask = aug_input_mask,token_type_ids=aug_segment_ids)[1])
             aug_log_prob = F.log_softmax(aug_logits / uda_softmax_temp, dim=-1)
 
-            #residual connection
-            proj_unsup_hid = model.projector(orig_hid) + orig_hid
+            #residual connection?
+            # proj_unsup_hid = model.projector(orig_hid) + orig_hid
+            proj_unsup_hid = model.projector(orig_hid)
             proj_unsup_logits = model.classifier(proj_unsup_hid)
             proj_unsup_log_prob = F.log_softmax(proj_unsup_logits / uda_softmax_temp, dim=-1)
 
@@ -183,8 +185,9 @@ def main(cfg, model_cfg):
             unsup_loss = torch.sum(unsup_criterion(aug_log_prob, ori_prob), dim=-1)
             unsup_loss = torch.sum(unsup_loss * unsup_loss_mask, dim=-1) / torch.max(torch.sum(unsup_loss_mask, dim=-1), torch.tensor(1.).to(device))
             
-            ruda_loss = - torch.sum(unsup_criterion(proj_unsup_log_prob, ori_prob), dim=-1)
+            ruda_loss = torch.sum(unsup_criterion(proj_unsup_log_prob, ori_prob), dim=-1)
             ruda_loss = torch.sum(ruda_loss * unsup_loss_mask, dim=-1) / torch.max(torch.sum(ruda_loss, dim=-1), torch.tensor(1.).to(device))
+            ruda_loss = - ruda_loss
             # final_loss = sup_loss + cfg.uda_coeff*unsup_loss +cfg.ruda_coeff*ruda_loss + cfg.proj_coeff * proj_loss
             final_loss = sup_loss + cfg.uda_coeff*unsup_loss +ruda_coeff*ruda_loss + proj_coeff * proj_loss
 
