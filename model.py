@@ -16,11 +16,15 @@ class BERTProjector():
         """
         super().__init__()
         self.bert = bert_model
-        if layer_num == 2:
+        if layer_num == 1:
+            self.projector = nn.Sequential(OrderedDict([
+            ('linear1', nn.Linear(input_dim, output_dim)),
+        ]))
+        elif layer_num == 2:
             self.projector = nn.Sequential(OrderedDict([
             ('linear1', nn.Linear(input_dim, hidden_dim)),
             ('tanh1', nn.Tanh()),
-            ('linear2', nn.Linear(hidden_dim,hidden_dim)),
+            ('linear2', nn.Linear(hidden_dim,output_dim)),
         ]))
         elif layer_num == 3:
             self.projector = nn.Sequential(OrderedDict([
@@ -28,7 +32,7 @@ class BERTProjector():
             ('tanh1', nn.Tanh()),
             ('linear2', nn.Linear(hidden_dim,hidden_dim)),
             ('tanh2', nn.Tanh()),
-            ('linear3', nn.Linear(hidden_dim,hidden_dim)),
+            ('linear3', nn.Linear(hidden_dim,output_dim)),
         ]))
         elif layer_num == 4:
             self.projector = nn.Sequential(OrderedDict([
@@ -39,6 +43,18 @@ class BERTProjector():
                 ('linear3', nn.Linear(hidden_dim,hidden_dim)),
                 ('tanh3', nn.Tanh()),
                 ('linear4', nn.Linear(hidden_dim,output_dim))
+            ]))
+        elif layer_num == 5:
+            self.projector = nn.Sequential(OrderedDict([
+                ('linear1', nn.Linear(input_dim, hidden_dim)),
+                ('tanh1', nn.Tanh()),
+                ('linear2', nn.Linear(hidden_dim,hidden_dim)),
+                ('tanh2', nn.Tanh()),
+                ('linear3', nn.Linear(hidden_dim,hidden_dim)),
+                ('tanh3', nn.Tanh()),
+                ('linear4', nn.Linear(hidden_dim,hidden_dim)),
+                ('tanh4', nn.Tanh()),
+                ('linear5', nn.Linear(hidden_dim,output_dim))
             ]))
         self.classifier = nn.Sequential(OrderedDict([
             ('linear1', nn.Linear(input_dim, hidden_dim)),

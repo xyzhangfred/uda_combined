@@ -21,7 +21,7 @@ import torch.nn.functional as F
 
 # import models
 import train
-from data_util.load_data import load_data
+from data.load_data import load_data
 # from utils.utils import get_device, _get_device, torch_device_one
 from utils import optim, configuration
 from transformers import BertModel
@@ -43,12 +43,8 @@ def get_tsa_thresh(schedule, global_step, num_train_steps, start, end,device):
 
 def main(cfg, model_cfg):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, help='config file path')
     parser.add_argument('--p', type=float, help='coeff for projection loss')
     parser.add_argument('--r', type=float, help='coeff for ruda loss')
-    parser.add_argument('--u', type=float, help='coeff for uda loss')
-    parser.add_argument('--hidden_dim', type=int, default = 768, help='hidden_dim for projector')
-    parser.add_argument('--layer_num', type=int, default = 4, help='layer_num for projector')
     parser.add_argument('--results_dir', type=str, default = None, help='result file name.')
     parser.add_argument('--sup_data_dir', type=str, default = None, help='sup data dir.')
     parser.add_argument('--eval_data_dir', type=str, default = None, help='eval_data_dir')
@@ -56,18 +52,13 @@ def main(cfg, model_cfg):
     args = parser.parse_args()
     
     # Load Configuration
-    if args.config is not None:
-        cfg = args.config        
-   
     cfg = json.load(open(cfg,'r'))
     if args.sup_data_dir is not None:
         cfg['sup_data_dir'] = args.sup_data_dir        
     if args.eval_data_dir is not None:          
         cfg['eval_data_dir'] = args.eval_data_dir                  
     if args.data_type is not None:
-        cfg['data_type'] = args.data_type     
-    if args.u is not None:
-        cfg['uda_coeff'] = args.u            
+        cfg['data_type'] = args.data_type             
     cfg = configuration.params.from_dict(cfg) 
 
     model_cfg = configuration.model.from_json(model_cfg)        # BERT_cfg
@@ -95,7 +86,7 @@ def main(cfg, model_cfg):
     # Load Model
     bert_model = BertModel.from_pretrained('bert-base-uncased')
     #hid_dim = 768 or 300
-    model = BERTProjector(bert_model, input_dim=768,hidden_dim=args.hidden_dim, output_dim=768, layer_num=args.layer_num)
+    model = BERTProjector(bert_model, input_dim=768,hidden_dim=300, output_dim=768)
     device = torch.device('cuda:0')
     optimizer = torch.optim.AdamW(list(model.bert.parameters())+list(model.projector.parameters())+list(model.classifier.parameters()),lr=cfg.lr)
     # Create trainer
@@ -107,7 +98,6 @@ def main(cfg, model_cfg):
         # logits -> prob(softmax) -> log_prob(log_softmax)
         # batch
         sup_batch_orig, sup_batch_cf = sup_batch
-        
         if unsup_batch:
             ori_input_ids, ori_segment_ids, ori_input_mask, \
             aug_input_ids, aug_segment_ids, aug_input_mask  = unsup_batch
@@ -118,18 +108,12 @@ def main(cfg, model_cfg):
         # sup loss
         sup_size = len(sup_batch_orig['input_ids']) 
         unsup_size = unsup_batch[0].shape[0]
-        hid_orig_sup = model.bert(input_ids=sup_batch_orig['input_ids'],attention_mask = sup_batch_orig['attention_mask'],\
-            token_type_ids=sup_batch_orig['token_type_ids'])[1]
-        hid_cf_sup = model.bert(input_ids=sup_batch_cf['input_ids'],attention_mask = sup_batch_cf['attention_mask'],
-        token_type_ids=sup_batch_cf['token_type_ids'])[1]
+        hid_orig_sup = model.bert(input_ids=sup_batch_orig['input_ids'],attention_mask = sup_batch_orig['attention_mask'])[1]
+        hid_cf_sup = model.bert(input_ids=sup_batch_cf['input_ids'],attention_mask = sup_batch_cf['attention_mask'])[1]
         logits_orig_sup = model.classifier(hid_orig_sup)      
         logits_cf_sup = model.classifier(hid_cf_sup)      
-        try:
-            sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])+sup_criterion(logits_cf_sup, sup_batch_cf['labels'])  # shape : train_batch_size
-        except:
-            breakpoint()
-        #what if we learn the residual
-        hid_sup_proj = model.projector(hid_orig_sup) + hid_orig_sup
+        sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])+sup_criterion(logits_cf_sup, sup_batch_cf['labels'])  # shape : train_batch_size
+        hid_sup_proj = model.projector(hid_orig_sup)
         proj_loss = sup_proj_criterion(hid_sup_proj,hid_cf_sup).mean()
         if cfg.tsa:
             tsa_thresh = get_tsa_thresh(cfg.tsa, global_step, cfg.total_steps, start=1./logits_orig_sup.shape[-1], end=1,device=device)
@@ -144,7 +128,7 @@ def main(cfg, model_cfg):
         if unsup_batch:
             # ori
             with torch.no_grad():
-                orig_hid = model.bert(input_ids = ori_input_ids, attention_mask = ori_input_mask,token_type_ids=ori_segment_ids)[1]
+                orig_hid = model.bert(input_ids = ori_input_ids, attention_mask = ori_input_mask)[1]
                 ori_logits = model.classifier(orig_hid)
                 ori_prob   = F.softmax(ori_logits, dim=-1)    # KLdiv target
                 # ori_log_prob = F.log_softmax(ori_logits, dim=-1)
@@ -160,11 +144,10 @@ def main(cfg, model_cfg):
             # aug
             # softmax temperature controlling
             uda_softmax_temp = cfg.uda_softmax_temp if cfg.uda_softmax_temp > 0 else 1.
-            aug_logits = model.classifier(model.bert(input_ids = aug_input_ids, attention_mask = aug_input_mask,token_type_ids=aug_segment_ids)[1])
+            aug_logits = model.classifier(model.bert(input_ids = aug_input_ids, attention_mask = aug_input_mask)[1])
             aug_log_prob = F.log_softmax(aug_logits / uda_softmax_temp, dim=-1)
 
-            #residual connection
-            proj_unsup_hid = model.projector(orig_hid) + orig_hid
+            proj_unsup_hid = model.projector(orig_hid)
             proj_unsup_logits = model.classifier(proj_unsup_hid)
             proj_unsup_log_prob = F.log_softmax(proj_unsup_logits / uda_softmax_temp, dim=-1)
 
@@ -218,7 +201,7 @@ def main(cfg, model_cfg):
 
 
 if __name__ == '__main__':
-    main('config/uda.json', 'config/bert_base.json')
+    main('config/uda_matres.json', 'config/bert_base.json')
     # fire.Fire(main)
     # for rep in range(5):
         # for p in [0,1,2,5]:
