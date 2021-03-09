@@ -9,6 +9,22 @@ import torch
 from transformers import BertTokenizer, BertModel, BertForSequenceClassification
 from transformers import BertForSequenceClassification, Trainer, TrainingArguments
 
+
+class resBlock(nn.Module):
+    def __init__(self,input_dim,hidden_dim,output_dim):
+        super(block1, self).__init__()
+        self.linear1 = nn.Linear(input_dim, hidden_dim)
+        self.linear2 = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self,x):
+        residual = x
+        out = F.relu(self.linear1(x))
+        out = F.relu(self.linear2(out))
+        
+        out += residual
+        return out
+
+
 class BERTProjector():
     def __init__(self, bert_model, input_dim,hidden_dim, output_dim,layer_num = 4 ):
         """
@@ -75,6 +91,36 @@ class BERTProjector():
                 all_outputs.append(output.detach().cpu().numpy())
         output = np.concatenate(all_outputs, 0)
         return output
+
+
+class BERTResProjector():
+    def __init__(self, bert_model, input_dim,hidden_dim, output_dim,block_num = 2 ):
+        """
+        BERT+Projector+Classifier
+        """
+        super().__init__()
+        self.bert = bert_model
+        if block_num == 1:
+            self.projector = nn.Sequential(OrderedDict([
+            ('block1', resBlock(input_dim,hidden_dim, output_dim)),
+        ]))
+        elif block_num == 2:
+            self.projector = nn.Sequential(OrderedDict([
+            ('block1', resBlock(input_dim,hidden_dim, hidden_dim)),
+            ('block2', resBlock(hidden_dim,hidden_dim, output_dim)),
+        ]))
+        elif block_num == 3:
+            self.projector = nn.Sequential(OrderedDict([
+            ('block1', resBlock(input_dim,hidden_dim, hidden_dim)),
+            ('block2', resBlock(hidden_dim,hidden_dim, hidden_dim)),
+            ('block3', resBlock(hidden_dim,hidden_dim, output_dim)),
+        ]))
+        self.classifier = nn.Sequential(OrderedDict([
+            ('linear1', nn.Linear(input_dim, hidden_dim)),
+            ('relu', nn.ReLU()),
+            ('linear2', nn.Linear(hidden_dim, 2)),
+        ]))
+
 
 
 
