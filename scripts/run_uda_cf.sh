@@ -11,14 +11,14 @@ do
         python main.py --p $p --r $r --u $u --results_dir ./results_feb24/cf_200_${p}_${r}_u_${u}rep_${rep} --sup_data_dir $SUP_DIR --eval_data_dir $eval_data_dir --data_type $DATA_TYPE
     done
 done
-# for rep in "0" "1" 
-# do
-# for p in "1" "5"
-# 	do
-#         for r in "1"  "5"
-#         do
-#             python main.py --p $p --r $r --u $u --results_dir ./results_feb24/cf_200_${p}_${r}_rep_${rep} --sup_data_dir $SUP_DIR --eval_data_dir $eval_data_dir --data_type $DATA_TYPE
+for rep in "0" "1" 
+do
+for p in "1" "5"
+	do
+        for r in "1"  "5"
+        do
+            python main.py --p $p --r $r --u $u --results_dir ./results_feb24/cf_200_${p}_${r}_rep_${rep} --sup_data_dir $SUP_DIR --eval_data_dir $eval_data_dir --data_type $DATA_TYPE
 
-#         done
-#     done
-# done
+        done
+    done
+done

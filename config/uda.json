@@ -6,7 +6,7 @@
     "mode": "train_eval",
     "uda_mode": true,
 
-    "total_steps": 1000,
+    "total_steps": 600,
     "max_seq_length": 128,
     "train_batch_size": 8,
     "eval_batch_size": 16,
@@ -31,7 +31,7 @@
     "task": "imdb",
 
     "save_steps": 5000,
-    "check_steps": 500,
+    "check_steps": 300,
     "results_dir": "results_imdb_2",
 
     "is_position": false

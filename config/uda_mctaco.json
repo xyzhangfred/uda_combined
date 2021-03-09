@@ -6,7 +6,7 @@
     "mode": "train_eval_cf",
     "uda_mode": true,
 
-    "total_steps": 200,
+    "total_steps": 1500,
     "max_seq_length": 128,
     "train_batch_size": 8,
     "eval_batch_size": 16,
@@ -23,7 +23,7 @@
     "data_type": "mctaco",
     "need_prepro": false,
     "sup_data_dir": "data/mctaco",
-    "unsup_data_dir": "data/mctaco/mctaco_unlabeled.tsv",
+    "unsup_data_dir": "data/mctaco/mctaco_unlabeled.txt",
     "eval_data_dir": "data/mctaco",
 
     "model_file":null,
@@ -32,7 +32,7 @@
     "task": "imdb",
 
     "save_steps": 5000,
-    "check_steps": 100,
+    "check_steps": 300,
     "results_dir": "results_mctaco",
 
     "is_position": false

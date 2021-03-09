@@ -204,15 +204,6 @@ class matres_unsup_dataset(Dataset):
         # unsupervised dataset
         data = {'ori':[], 'aug':[]}
         tokenizer=BertTokenizer.from_pretrained('bert-base-uncased')
-        # for line in lines:
-        #     ori = tokenizer(line.strip(),
-        #         max_length=max_len,
-        #         padding="max_length",
-        #         truncation=True,)
-
-        #     self.cnt += 1
-        #     data['ori'].append(ori)    # drop label_id
-        # ori_tensor = [torch.tensor(x, dtype=torch.long) for x in zip(*data['ori'])]
         ori_tokenized = tokenizer([(line.strip(),None ) for line in orig_lines],
                 max_length=max_len,
                 padding="max_length",
@@ -244,15 +235,15 @@ class mctaco_unsup_dataset(Dataset):
         # unsupervised dataset
         data = {'ori':[], 'aug':[]}
         tokenizer=BertTokenizer.from_pretrained('bert-base-uncased')
-        ori_tokenized = tokenizer([(line.split('\t')[0]+line.split('\t')[1],line.split('\t')[2].strip() ) for line in lines],
-                max_length=max_len,
-                padding="max_length",
-                truncation=True,)
+        ori_lines = [(line.split('\t')[0]+' ' +line.split('\t')[1],line.split('\t')[2] ) for line in lines]
+        aug_lines = [(line.split('\t')[3]+' ' +line.split('\t')[4],line.split('\t')[5].strip()) for line in lines]
+
+        ori_tokenized = tokenizer(ori_lines,max_length=max_len,padding="max_length",truncation=True,)
         ori_tensor = [torch.LongTensor(x) for x in [ori_tokenized['input_ids'],ori_tokenized['token_type_ids'],ori_tokenized['attention_mask']]]
-        #just duplicate orig to be aug
-        aug_tensor = ori_tensor
+        aug_tokenized = tokenizer(aug_lines,max_length=max_len,padding="max_length",truncation=True,)
+        aug_tensor = [torch.LongTensor(x) for x in [aug_tokenized['input_ids'],aug_tokenized['token_type_ids'],aug_tokenized['attention_mask']]]
+       
         self.tensors = ori_tensor + aug_tensor
-        # already preprocessed
         
     def __len__(self):
         return self.tensors[0].size(0)
