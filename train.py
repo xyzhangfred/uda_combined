@@ -24,7 +24,7 @@ from tqdm import tqdm
 
 import torch
 import torch.nn as nn
-
+import numpy as np
 # from utils import checkpoint
 # from utils.logger import Logger
 from tensorboardX import SummaryWriter
@@ -67,7 +67,9 @@ class Trainer(object):
         acc_file = os.path.join(self.results_dir, 'acc.txt')
         with open (acc_file, 'a') as f:
             f.write('Step, Acc_orig, Acc_cf\n')
-
+        loss_file = os.path.join(self.results_dir, 'eval_loss.txt')
+        with open (loss_file, 'a') as f:
+            f.write('Step, Proj_loss, Sup_loss\n')
         self.model.bert.train()
         self.model.bert.to(self.device)
         self.model.projector.train()
@@ -135,19 +137,22 @@ class Trainer(object):
             if global_step % self.cfg.save_steps == 0:
                 self.save(global_step)
 
-            if get_acc and global_step % self.cfg.check_steps == 0:
+            if get_acc and global_step % self.cfg.check_steps == 0 or global_step == 1:
+                eval_losses = self.eval_loss(self.model)
                 results_orig = self.eval(get_acc, None, self.model, 'orig')
                 total_accuracy_orig = torch.cat(results_orig).mean().item()
                 logger.add_scalars('data/scalar_group', {'eval_acc_orig' : total_accuracy_orig}, global_step)
                 results_cf = self.eval(get_acc, None, self.model, 'cf')
                 total_accuracy_cf = torch.cat(results_cf).mean().item()
                 logger.add_scalars('data/scalar_group', {'eval_acc_cf' : total_accuracy_cf}, global_step)
-
                 if max_acc_cf[0] < total_accuracy_cf:
                     self.save(global_step)
                     max_acc_cf = total_accuracy_cf, global_step
                 with open (acc_file, 'a') as f:
                     f.write('{}, {:.3f} , {:.3f}\n'.format(global_step, total_accuracy_orig,total_accuracy_cf))
+                with open (loss_file, 'a') as f:
+                    f.write('{}, {:.3f} , {:.3f}\n'.format(global_step, eval_losses['proj'],eval_losses['sup']))
+                
                 print('Accuracy Orig: %5.3f' % total_accuracy_orig)
                 print('Accuracy CF: %5.3f' % total_accuracy_cf)
                 print('Max Accuracy CF: %5.3f Max global_steps : %d Cur global_steps : %d' %(max_acc_cf[0], max_acc_cf[1], global_step), end='\n\n')
@@ -187,6 +192,38 @@ class Trainer(object):
             iter_bar.set_description('Eval Acc {} ={:5.3f}'.format(prefix,accuracy))
         return results
             
+    def eval_loss(self, model):
+        sup_criterion = nn.CrossEntropyLoss(reduction='none')
+        unsup_criterion = nn.KLDivLoss(reduction='none')
+        sup_proj_criterion = nn.MSELoss(reduction='mean')
+
+        all_eval_losses = {'sup':[], 'proj':[]}
+        orig_iter_bar = tqdm(deepcopy(self.orig_eval_iter))
+        cf_iter_bar = tqdm(deepcopy(self.cf_eval_iter))
+        for orig_batch,cf_batch in zip(orig_iter_bar,cf_iter_bar):
+            orig_batch = {t: orig_batch[t].to(self.device) for t in orig_batch}
+            cf_batch = {t: cf_batch[t].to(self.device) for t in cf_batch}
+            # Device assignment
+            # sup loss
+            hid_orig = model.bert(input_ids=orig_batch['input_ids'],attention_mask = orig_batch['attention_mask'],token_type_ids=orig_batch['token_type_ids'])[1]
+            hid_cf = model.bert(input_ids=cf_batch['input_ids'],attention_mask = cf_batch['attention_mask'],token_type_ids=cf_batch['token_type_ids'])[1]
+            logits_orig = model.classifier(hid_orig)      
+            logits_cf = model.classifier(hid_cf)      
+            try:
+                sup_loss = sup_criterion(logits_orig, orig_batch['labels'])+sup_criterion(logits_cf, cf_batch['labels'])  # shape : train_batch_size
+            except:
+                breakpoint()
+            #what if we learn the residual
+            # hid_sup_proj = model.projector(hid_orig_sup) + hid_orig_sup
+            hid_cf_proj = model.projector(hid_orig) 
+            proj_loss = sup_proj_criterion(hid_cf_proj,hid_cf).mean()
+            sup_loss = torch.mean(sup_loss)
+            all_eval_losses['proj'].append(proj_loss.item())
+            all_eval_losses['sup'].append(sup_loss.item())
+            # unsup loss
+        eval_losses = {t:np.mean(v) for t,v in all_eval_losses.items()} 
+        return eval_losses
+
     def load(self, model_file, pretrain_file):
         """ between model_file and pretrain_file, only one model will be loaded """
         if model_file:

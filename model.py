@@ -106,8 +106,8 @@ class BERTResProjector():
         ]))
         elif block_num == 2:
             self.projector = nn.Sequential(OrderedDict([
-            ('block1', resBlock(input_dim,hidden_dim, hidden_dim)),
-            ('block2', resBlock(hidden_dim,hidden_dim, output_dim)),
+            ('block1', resBlock(input_dim,hidden_dim, output_dim)),
+            ('block2', resBlock(input_dim,hidden_dim, output_dim)),
         ]))
         elif block_num == 3:
             self.projector = nn.Sequential(OrderedDict([
