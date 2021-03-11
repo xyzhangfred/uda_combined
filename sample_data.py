@@ -2,6 +2,7 @@ import random
 import numpy as np
 import pandas as pd
 import os 
+import argparse
 
 def make_subset(source_path, new_dir,data_num= 100):
 
@@ -9,7 +10,6 @@ def make_subset(source_path, new_dir,data_num= 100):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     old_path = os.path.join(source_path, 'train_paired.tsv')
-    
     new_path = os.path.join(out_dir, 'train_paired.tsv')
     
     with open(old_path, 'r') as f:
@@ -26,7 +26,7 @@ def make_subset(source_path, new_dir,data_num= 100):
 
 
 
-def main(cfg, model_cfg):
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source_path', type=str, help='type of data')
     parser.add_argument('--target_path', type=str, help='type of data')
@@ -38,8 +38,11 @@ def main(cfg, model_cfg):
         if prev_num is None:
             make_subset(data_num=num, source_path = args.source_path, new_dir = new_dir)
         else:
-            make_subset(data_num=num, source_path = args.target_path.format(prev_num), new_dir = new_dir)
+            make_subset(data_num=num, source_path = new_dir.format(prev_num), new_dir = new_dir)
         prev_num = num
+
+if __name__ == '__main__':
+    main()
 
 
     
