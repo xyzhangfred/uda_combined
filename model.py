@@ -98,6 +98,7 @@ class BERTResProjector():
         """
         BERT+Projector+Classifier
         """
+        assert input_dim == output_dim, "dimension don't match for res connection"
         super().__init__()
         self.bert = bert_model
         if block_num == 1:
