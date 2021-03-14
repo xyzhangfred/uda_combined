@@ -1,12 +1,12 @@
 import pandas as pd
 
-res_dir = '/home/zhang.xio/xyz/repos/uda_combined/results_mar9_2/cf/cfnum_{}_p_{}_r_{}_u_{}_hid_{}_layer_{}_rep_{}/acc.txt'
+res_dir = '/home/zhang.xio/xyz/repos/uda_combined/results_mar11/cf/cfnum_{}_p_{}_r_{}_u_{}_hid_{}_layer_{}_rep_{}/acc.txt'
 
 res_df = pd.DataFrame(columns = ['train_num','p','r','u','rep','hid','layer','acc_orig','acc_cf'])
 
 idx = 0
-for p in [0]:
-    for r in [0]:
+for p in [0,1,2]:
+    for r in [0,0.1,0.5]:
         for u in [0,1]:
             for rep in range(10):
                 for num in [2,5,10,20,50,100,]:
@@ -23,5 +23,5 @@ for p in [0]:
                             except:
                                 continue
                             
-res_df.to_csv('mar_9_base_cf.csv')
+res_df.to_csv('mar_12_cf.csv')
     
