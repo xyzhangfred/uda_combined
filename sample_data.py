@@ -47,7 +47,7 @@ def main():
     if args.data_type == 'cf':
         new_dir = os.path.join(args.target_path, 'cf_train_{}')
     elif args.data_type == 'matres':
-        new_dir = os.path.join(args.target_path, 'num_{}', 'matres_train')
+        new_dir = os.path.join(args.target_path, 'num_{}')
     prev_num = None
     for num in [200,100,50,20,10,5,2]:
         if prev_num is None:

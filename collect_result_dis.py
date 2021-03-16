@@ -1,6 +1,6 @@
 import pandas as pd
 
-res_dir = '/home/zhang.xio/xyz/repos/uda_combined/results_mar11/cf/cfnum_{}_p_{}_r_{}_u_{}_hid_{}_layer_{}_rep_{}/acc.txt'
+res_dir = '/home/zhang.xio/xyz/repos/uda_combined/results_mar14/matres_p_{}_r_{}_u_{}_rep_{}_num_{}/acc.txt'
 
 res_df = pd.DataFrame(columns = ['train_num','p','r','u','rep','hid','layer','acc_orig','acc_cf'])
 
@@ -12,7 +12,7 @@ for p in [0,1,2]:
                 for num in [2,5,10,20,50,100,]:
                     for hid in [300]:
                         for layer in [1]:
-                            res_file = res_dir.format(num,p,r,u,hid,layer,rep)
+                            res_file = res_dir.format(p,r,u,rep,num)
                             try :
                                 with open(res_file, 'r') as f:
                                     lines = f.readlines()
@@ -23,5 +23,5 @@ for p in [0,1,2]:
                             except:
                                 continue
                             
-res_df.to_csv('mar_12_cf.csv')
+res_df.to_csv('mar_14_matres.csv')
     
