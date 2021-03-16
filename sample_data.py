@@ -79,28 +79,29 @@ def main():
         new_dir = os.path.join(args.target_path, 'num_{}')
   
     if args.baseline:
-        new_dir = os.path.join(new_dir,'baseline')
+        baseline_new_dir = os.path.join(new_dir,'baseline')
 
     prev_num = None
     for num in [200,100,50,20,10,5,2]:
-        if args.baseline:
-            num = 2*num
         if prev_num is None:
-            if args.data_type == 'cf':
-                make_subset_cf(data_num=num, source_path = args.source_path, new_dir = new_dir)
-            elif args.data_type == 'matres':
-                make_subset_matres(data_num=num, source_path = args.source_path, new_dir = new_dir)
-            elif args.data_type == 'mctaco':
-                make_subset_mctaco(data_num=num, source_path = args.source_path, new_dir = new_dir)
-    
+            source_path = args.source_path
         else:
+            source_path = new_dir.format(prev_num)
+        if args.baseline:
             if args.data_type == 'cf':
-                make_subset_cf(data_num=num, source_path = new_dir.format(prev_num), new_dir = new_dir)
+                make_subset_cf(data_num=2*num, source_path = source_path, new_dir = baseline_new_dir)
             elif args.data_type == 'matres':
-                make_subset_matres(data_num=num, source_path = new_dir.format(prev_num), new_dir = new_dir)
+                make_subset_matres(data_num=2*num, source_path = source_path, new_dir = baseline_new_dir)
             elif args.data_type == 'mctaco':
-                make_subset_mctaco(data_num=num, source_path = new_dir.format(prev_num), new_dir = new_dir)
-
+                make_subset_mctaco(data_num=2*num, source_path = source_path, new_dir = baseline_new_dir)
+        else :
+            if args.data_type == 'cf':
+                make_subset_cf(data_num=num, source_path = source_path, new_dir = new_dir)
+            elif args.data_type == 'matres':
+                make_subset_matres(data_num=num, source_path = source_path, new_dir = new_dir)
+            elif args.data_type == 'mctaco':
+                make_subset_mctaco(data_num=num, source_path = source_path, new_dir = new_dir)
+    
         prev_num = num
 
 if __name__ == '__main__':
