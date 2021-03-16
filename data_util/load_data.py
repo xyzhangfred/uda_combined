@@ -78,14 +78,14 @@ class load_data:
 
     def eval_data_iter(self):
         if self.data_type == 'imdb_cf':
-            orig_eval_sents,orig_eval_labels, cf_eval_sents, cf_eval_labels = read_imdb_cf_data(prefix = 'dev', data_dir = self.eval_data_dir, max_len = 50,num = 10000)
+            orig_eval_sents,orig_eval_labels, cf_eval_sents, cf_eval_labels = read_imdb_cf_data(prefix = 'dev', data_dir = self.eval_data_dir, max_len = 128,num = 10000)
         elif self.data_type == 'imdb_contrast':
             #for imdb_contrast use test data as training data since there's more of that
-            orig_eval_sents,orig_eval_labels, cf_eval_sents, cf_eval_labels = read_imdb_contrast_data(prefix = 'dev', max_len = 128,data_dir = self.sup_data_dir,num=100)
+            orig_eval_sents,orig_eval_labels, cf_eval_sents, cf_eval_labels = read_imdb_contrast_data(prefix = 'dev', max_len = 128,data_dir = self.sup_data_dir)
         elif self.data_type == 'matres':
-            orig_eval_sents,orig_eval_labels, cf_eval_sents, cf_eval_labels = read_matres_data(prefix = 'test', max_len = 128,data_dir = self.sup_data_dir,num=100)
+            orig_eval_sents,orig_eval_labels, cf_eval_sents, cf_eval_labels = read_matres_data(prefix = 'test', max_len = 128,data_dir = self.eval_data_dir)
         elif self.data_type == 'mctaco':
-            orig_eval_sents,orig_eval_labels, cf_eval_sents, cf_eval_labels = read_mctaco_data(prefix = 'test', max_len = 128,data_dir = self.sup_data_dir)
+            orig_eval_sents,orig_eval_labels, cf_eval_sents, cf_eval_labels = read_mctaco_data(prefix = 'test', max_len = 128,data_dir = self.eval_data_dir)
         
         orig_eval_data_iter = get_single_dataloader(self.tokenizer,orig_eval_sents,orig_eval_labels,batch_size = 8,max_len=128,shuffle=False)
         cf_eval_data_iter = get_single_dataloader(self.tokenizer,cf_eval_sents, cf_eval_labels, batch_size = 8,max_len=128,shuffle=False)

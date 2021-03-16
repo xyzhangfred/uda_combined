@@ -53,6 +53,8 @@ def main(cfg, model_cfg):
     parser.add_argument('--sup_data_dir', type=str, default = None, help='sup data dir.')
     parser.add_argument('--eval_data_dir', type=str, default = None, help='eval_data_dir')
     parser.add_argument('--data_type', type=str, default = None, help='imdb cf or imdb contrast',)
+    parser.add_argument('--only_orig', action='store_true', help='only train on orig',)
+    parser.add_argument('--only_cf', action = 'store_true', help='only train on cf',)
     args = parser.parse_args()
     
     # Load Configuration
@@ -126,7 +128,16 @@ def main(cfg, model_cfg):
         logits_orig_sup = model.classifier(hid_orig_sup)      
         logits_cf_sup = model.classifier(hid_cf_sup)      
         try:
-            sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])+sup_criterion(logits_cf_sup, sup_batch_cf['labels'])  # shape : train_batch_size
+            if args.only_orig:
+                assert args.p == 0
+                assert args.r == 0
+                sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])
+            elif args.only_cf:
+                assert args.p == 0
+                assert args.r == 0
+                sup_loss = sup_criterion(logits_cf_sup, sup_batch_cf['labels'])
+            else:
+                sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])+sup_criterion(logits_cf_sup, sup_batch_cf['labels'])  # shape : train_batch_size
         except:
             breakpoint()
         #what if we learn the residual
