@@ -47,6 +47,7 @@ def main(cfg, model_cfg):
     parser.add_argument('--p', type=float, help='coeff for projection loss')
     parser.add_argument('--r', type=float, help='coeff for ruda loss')
     parser.add_argument('--u', type=float, help='coeff for uda loss')
+    parser.add_argument('--theta', type=float,default=1.0, help='cap for ruda loss')
     parser.add_argument('--hidden_dim', type=int, default = 300, help='hidden_dim for projector')
     parser.add_argument('--layer_num', type=int, default = 1, help='layer_num for projector')
     parser.add_argument('--results_dir', type=str, default = None, help='result file name.')
@@ -196,8 +197,12 @@ def main(cfg, model_cfg):
             unsup_loss = torch.sum(unsup_criterion(aug_log_prob, ori_prob), dim=-1)
             unsup_loss = torch.sum(unsup_loss * unsup_loss_mask, dim=-1) / torch.max(torch.sum(unsup_loss_mask, dim=-1), torch.tensor(1.).to(device))
             
-            ruda_loss = torch.sum(unsup_criterion(proj_unsup_log_prob, ori_prob), dim=-1)
-            ruda_loss = torch.sum(ruda_loss * unsup_loss_mask, dim=-1) / torch.max(torch.sum(ruda_loss, dim=-1), torch.tensor(1.).to(device))
+            if args.theta > 0:
+                ruda_loss = torch.sum(unsup_criterion(proj_unsup_log_prob, ori_prob), dim=-1)
+                ruda_loss = torch.sum(ruda_loss * unsup_loss_mask, dim=-1) / torch.max(ruda_loss, torch.tensor(args.theta).to(device))
+            elif args.theta == -1:
+                ruda_loss = torch.norm(torch.exp(proj_unsup_log_prob)-ori_prob,2)
+            breakpoint()
             ruda_loss = - ruda_loss
             # final_loss = sup_loss + cfg.uda_coeff*unsup_loss +cfg.ruda_coeff*ruda_loss + cfg.proj_coeff * proj_loss
             final_loss = sup_loss + cfg.uda_coeff*unsup_loss +ruda_coeff*ruda_loss + proj_coeff * proj_loss

@@ -6,7 +6,7 @@
     "mode": "train_eval_cf",
     "uda_mode": true,
 
-    "total_steps": 1500,
+    "total_steps": 800,
     "max_seq_length": 128,
     "train_batch_size": 8,
     "eval_batch_size": 16,
@@ -32,7 +32,7 @@
     "task": "imdb",
 
     "save_steps": 1500,
-    "check_steps": 300,
+    "check_steps": 400,
     "results_dir": "results_mctaco",
 
     "is_position": false

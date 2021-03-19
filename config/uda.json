@@ -6,7 +6,7 @@
     "mode": "train_eval",
     "uda_mode": true,
 
-    "total_steps": 600,
+    "total_steps": 1500,
     "max_seq_length": 128,
     "train_batch_size": 8,
     "eval_batch_size": 16,
