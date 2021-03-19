@@ -199,11 +199,10 @@ def main(cfg, model_cfg):
             
             if args.theta > 0:
                 ruda_loss = torch.sum(unsup_criterion(proj_unsup_log_prob, ori_prob), dim=-1)
-                ruda_loss = torch.sum(ruda_loss * unsup_loss_mask, dim=-1) / torch.max(ruda_loss, torch.tensor(args.theta).to(device))
+                ruda_loss = torch.sum(ruda_loss * unsup_loss_mask, dim=-1) / torch.max( torch.sum(ruda_loss * unsup_loss_mask, dim=-1) , torch.tensor(args.theta).to(device))
             elif args.theta == -1:
                 ruda_loss = torch.norm(torch.exp(proj_unsup_log_prob)-ori_prob,2)
-            breakpoint()
-            ruda_loss = - ruda_loss
+            ruda_loss = -ruda_loss
             # final_loss = sup_loss + cfg.uda_coeff*unsup_loss +cfg.ruda_coeff*ruda_loss + cfg.proj_coeff * proj_loss
             final_loss = sup_loss + cfg.uda_coeff*unsup_loss +ruda_coeff*ruda_loss + proj_coeff * proj_loss
 
