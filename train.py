@@ -57,6 +57,13 @@ class Trainer(object):
             self.unsup_iter = self.repeat_dataloader(data_iter[1])
             self.orig_eval_iter = data_iter[2]
             self.cf_eval_iter = data_iter[3]
+        elif len(data_iter) == 5:
+            self.sup_iter = self.repeat_dataloader(data_iter[0])
+            self.orig_sup_iter = self.repeat_dataloader(data_iter[1])
+            self.unsup_iter = self.repeat_dataloader(data_iter[2])
+            self.orig_eval_iter = data_iter[3]
+            self.cf_eval_iter = data_iter[4]
+        
 
     def train(self, get_loss, get_acc, model_file, pretrain_file):
         """ train uda"""
@@ -96,6 +103,11 @@ class Trainer(object):
                 sup_batch_cf = {t: sup_batch_cf[t].to(self.device) for t in sup_batch_cf}
                 sup_batch = [sup_batch_orig, sup_batch_cf]
                 unsup_batch = [t.to(self.device) for t in batch]
+                if self.cfg.unbalanced:
+                    orig_sup_batch = next(self.orig_sup_iter)
+                    orig_sup_batch = {t: orig_sup_batch[t].to(self.device) for t in orig_sup_batch}
+                else:
+                    orig_sup_batch = None
             
             else:
                 sup_batch = [t.to(self.device) for t in batch]
@@ -103,7 +115,7 @@ class Trainer(object):
 
             # update
             self.optimizer.zero_grad()
-            final_loss, sup_loss, unsup_loss,ruda_loss,proj_loss = get_loss(self.model, sup_batch, unsup_batch, global_step)
+            final_loss, sup_loss, unsup_loss,ruda_loss,proj_loss = get_loss(self.model, sup_batch, unsup_batch,orig_sup_batch, global_step)
             # final_loss_x_ruda = sup_loss+unsup_loss+proj_loss
             # final_loss_x_ruda.backward(retain_graph=True)
             final_loss.backward()

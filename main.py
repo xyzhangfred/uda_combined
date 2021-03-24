@@ -52,10 +52,13 @@ def main(cfg, model_cfg):
     parser.add_argument('--layer_num', type=int, default = 1, help='layer_num for projector')
     parser.add_argument('--results_dir', type=str, default = None, help='result file name.')
     parser.add_argument('--sup_data_dir', type=str, default = None, help='sup data dir.')
+    parser.add_argument('--orig_sup_data_dir', type=str, default = None, help='orig sup data dir.')
     parser.add_argument('--eval_data_dir', type=str, default = None, help='eval_data_dir')
     parser.add_argument('--data_type', type=str, default = None, help='imdb cf or imdb contrast',)
     parser.add_argument('--only_orig', action='store_true', help='only train on orig',)
     parser.add_argument('--only_cf', action = 'store_true', help='only train on cf',)
+    parser.add_argument('--unbalanced', action = 'store_true', help='to have more orig than cf',)
+    parser.add_argument('--orig_num', type=int, default=200, help='num of total orig samples.')
     args = parser.parse_args()
     
     # Load Configuration
@@ -64,13 +67,16 @@ def main(cfg, model_cfg):
    
     cfg = json.load(open(cfg,'r'))
     if args.sup_data_dir is not None:
-        cfg['sup_data_dir'] = args.sup_data_dir        
+        cfg['sup_data_dir'] = args.sup_data_dir   
+    if args.orig_sup_data_dir is not None:
+        cfg['orig_sup_data_dir'] = args.orig_sup_data_dir             
     if args.eval_data_dir is not None:          
         cfg['eval_data_dir'] = args.eval_data_dir                  
     if args.data_type is not None:
         cfg['data_type'] = args.data_type     
     if args.u is not None:
-        cfg['uda_coeff'] = args.u            
+        cfg['uda_coeff'] = args.u   
+    cfg['unbalanced'] = args.unbalanced           
     cfg = configuration.params.from_dict(cfg) 
 
     model_cfg = configuration.model.from_json(model_cfg)        # BERT_cfg
@@ -88,9 +94,15 @@ def main(cfg, model_cfg):
     # Load Data & Create Criterion
     data = load_data(cfg)
     if cfg.uda_mode:
-        unsup_criterion = nn.KLDivLoss(reduction='none')
-        orig_eval_iter,cf_eval_iter = data.eval_data_iter()
-        data_iter = [data.sup_data_iter(), data.unsup_data_iter(), orig_eval_iter,cf_eval_iter]  # train_eval
+        if args.unbalanced:
+            unsup_criterion = nn.KLDivLoss(reduction='none')
+            orig_eval_iter,cf_eval_iter = data.eval_data_iter()
+            data_iter = [data.sup_data_iter(), data.orig_sup_data_iter(),data.unsup_data_iter(), orig_eval_iter,cf_eval_iter]  # train_eval
+        else:
+            unsup_criterion = nn.KLDivLoss(reduction='none')
+            orig_eval_iter,cf_eval_iter = data.eval_data_iter()
+            data_iter = [data.sup_data_iter(), data.unsup_data_iter(), orig_eval_iter,cf_eval_iter]  # train_eval
+
     else:
         data_iter = [data.sup_data_iter(),data.eval_data_iter()]
     sup_criterion = nn.CrossEntropyLoss(reduction='none')
@@ -106,12 +118,18 @@ def main(cfg, model_cfg):
     trainer = train.Trainer(cfg, model, data_iter, optimizer, device, results_dir)
 
     # Training
-    def get_loss(model, sup_batch, unsup_batch, global_step):
+    def get_loss(model, sup_batch, unsup_batch,orig_sup_batch, global_step):
 
         # logits -> prob(softmax) -> log_prob(log_softmax)
         # batch
         sup_batch_orig, sup_batch_cf = sup_batch
-        
+        if orig_sup_batch:
+            osup_size = len(orig_sup_batch['input_ids']) 
+            hid_osup = model.bert(input_ids=orig_sup_batch['input_ids'],attention_mask = orig_sup_batch['attention_mask'],\
+                token_type_ids=orig_sup_batch['token_type_ids'])[1]
+            logits_osup = model.classifier(hid_osup)     
+            orig_sup_loss = sup_criterion(logits_osup, orig_sup_batch['labels'])
+            orig_sup_loss = torch.mean(orig_sup_loss)
         if unsup_batch:
             ori_input_ids, ori_segment_ids, ori_input_mask, \
             aug_input_ids, aug_segment_ids, aug_input_mask  = unsup_batch
@@ -141,6 +159,8 @@ def main(cfg, model_cfg):
                 sup_loss = sup_criterion(logits_orig_sup, sup_batch_orig['labels'])+sup_criterion(logits_cf_sup, sup_batch_cf['labels'])  # shape : train_batch_size
         except:
             breakpoint()
+        if orig_sup_batch:
+            sup_loss += orig_sup_loss
         #what if we learn the residual
         # hid_sup_proj = model.projector(hid_orig_sup) + hid_orig_sup
         hid_sup_proj = model.projector(hid_orig_sup) 

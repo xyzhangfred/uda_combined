@@ -38,6 +38,7 @@ class load_data:
         self.n_sup = cfg.n_sup
         self.data_type = cfg.data_type
         self.sup_data_dir = cfg.sup_data_dir
+        self.orig_sup_data_dir = cfg.orig_sup_data_dir
         self.eval_data_dir= cfg.eval_data_dir
         self.sup_batch_size = cfg.train_batch_size
         self.eval_batch_size = cfg.eval_batch_size
@@ -49,7 +50,7 @@ class load_data:
     #need a function for loading dataset, both sup and unsup.
     def sup_data_iter(self):
         if self.data_type == 'imdb_cf':
-            orig_sents,orig_labels,cf_sents, cf_labels = read_imdb_cf_data(prefix = 'train', max_len = 128,data_dir = self.sup_data_dir,num=200)
+            orig_sents,orig_labels,cf_sents, cf_labels = read_imdb_cf_data(prefix = 'train', max_len = 128,data_dir = self.sup_data_dir)
         elif self.data_type == 'imdb_contrast':
             #for imdb_contrast use test data as training data since there's more of that
             orig_sents,orig_labels,cf_sents, cf_labels = read_imdb_contrast_data(prefix = 'test', max_len = 128,data_dir = self.sup_data_dir)
@@ -61,6 +62,21 @@ class load_data:
         assert len(orig_sents) == len(cf_sents)
         sup_data_iter = get_paired_dataloader(self.tokenizer,orig_sents,orig_labels,cf_sents, cf_labels, batch_size = 8,max_len=128)
         return sup_data_iter
+        
+    def orig_sup_data_iter(self):
+        if self.data_type == 'imdb_cf':
+            orig_sents,orig_labels= read_imdb_cf_data(prefix = 'train',single = True, max_len = 128,data_dir = self.orig_sup_data_dir)
+        # elif self.data_type == 'imdb_contrast':
+            #for imdb_contrast use test data as training data since there's more of that
+            # orig_sents,orig_labels,cf_sents, cf_labels = read_imdb_contrast_data(prefix = 'test', max_len = 128,data_dir = self.orig_sup_data_dir)
+        elif self.data_type == 'matres':
+            orig_sents,orig_labels = read_matres_data(prefix = 'train', single = True,max_len = 128,data_dir = self.orig_sup_data_dir)
+        elif self.data_type == 'mctaco':
+            # orig_sents,orig_labels,cf_sents, cf_labels = read_mctaco_data(prefix = 'train', max_len = 128,data_dir = self.sup_data_dir)
+            orig_sents, orig_labels = read_mctaco_data(prefix = 'train', single = True,max_len = 128,data_dir = self.orig_sup_data_dir)
+        
+        orig_sup_data_iter = get_single_dataloader(self.tokenizer,orig_sents,orig_labels,batch_size = 8,max_len=128)
+        return orig_sup_data_iter
 
     def unsup_data_iter(self):
         if 'imdb' in self.data_type:
