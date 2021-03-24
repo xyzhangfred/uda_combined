@@ -43,6 +43,7 @@ class params(NamedTuple):
     do_lower_case: bool = True
     mode: str = None                    # train, eval, test
     uda_mode: bool = False              # True, False
+    unbalanced: bool = False              # True, False
     
     total_steps: int = 100000           # total_steps >= n_epcohs * n_examples / 3
     max_seq_length: int = 128
@@ -64,6 +65,7 @@ class params(NamedTuple):
     data_type: str = 'imdb_cf'
     sup_data_dir: str = None
     unsup_data_dir: str = None
+    orig_sup_data_dir: str = None
     eval_data_dir: str = None
     n_sup: int = 100
     n_unsup: int = None

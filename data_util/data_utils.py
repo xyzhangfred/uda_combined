@@ -200,6 +200,9 @@ def get_paired_dataloader(tokenizer,orig_sents,orig_labels,cf_sents, cf_labels, 
 
     orig_features = convert_examples_to_features(orig_examples, tokenizer, max_length=max_len, )
     cf_features = convert_examples_to_features(cf_examples, tokenizer, max_length=max_len, )
+    if len(cf_features) < len(orig_features):
+        diff = len(orig_features) - len(cf_features)
+        cf_features += [None for _ in range(diff)]  
 
     dataset = PairedBertDataset(orig_features, cf_features)
     dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=paired_data_collator, shuffle= True)
